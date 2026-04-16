@@ -81,7 +81,6 @@ widgets:
           text: "21"
           subtext: "G"
 backupIgnore:
-submitter: wvk2017
   - data/node/blocks
   - data/node/chainstate
   - data/node/indexes
