@@ -38,25 +38,25 @@ services:
       - ${APP_DATA_DIR}/data:/data
       - ${APP_DATA_DIR}/bin:/opt/fractal
     environment:
-      VERSION: "0.2.9rc2"
+      VERSION: "v0.3.0"
     command: >
       bash -c "
         set -e
         BINARY=/opt/fractal/bin/bitcoind
         if [ ! -f $$BINARY ]; then
-          echo 'Downloading fractald v0.2.9rc2...'
+          echo 'Downloading fractald v0.3.0...'
           apt-get update -qq && apt-get install -y wget tar -qq
           ARCH=$$(uname -m)
           if [ $$ARCH = 'aarch64' ]; then
-            FILE=fractald-0.2.9rc2-aarch64-linux-gnu.tar.gz
+            FILE=fractald-v0.3.0-aarch64-linux-gnu.tar.gz
           else
-            FILE=fractald-0.2.9rc2-x86_64-linux-gnu.tar.gz
+            FILE=fractald-v0.3.0-x86_64-linux-gnu.tar.gz
           fi
-          URL=https://github.com/fractal-bitcoin/fractald-release/releases/download/v0.2.9rc2/$$FILE
+          URL=https://github.com/fractal-bitcoin/fractald-release/releases/v0.3.0/$$FILE
           wget -q -O /tmp/fractald.tar.gz $$URL
           tar -xzf /tmp/fractald.tar.gz -C /tmp
-          mv /tmp/fractald-0.2.9rc2-*/  /opt/fractal/
-          rm -rf /tmp/fractald.tar.gz /tmp/fractald-0.2.9rc2-*
+          mv /tmp/fractald-v0.3.0-*/  /opt/fractal/
+          rm -rf /tmp/fractald.tar.gz /tmp/fractald-v0.3.0-*
           echo 'Download complete.'
         fi
         mkdir -p /data
