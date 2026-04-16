@@ -84,4 +84,4 @@ backupIgnore:
   - data/node/blocks
   - data/node/chainstate
   - data/node/indexes
-submitter: wvk2017
+submitter: GoStrataCore
