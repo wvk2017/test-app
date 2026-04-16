@@ -42,8 +42,11 @@ repo: https://github.com/Ellevix/Mining-community-store
 support: https://github.com/Ellevix/Mining-community-store
 dependencies: []
 port: 32122
-icon: ""
-gallery: []
+icon: "https://raw.githubusercontent.com/wvk2017/test-app/refs/heads/main/gofractal/icon.png"
+gallery:
+  - "https://raw.githubusercontent.com/wvk2017/test-app/refs/heads/main/gofractal/images/1.png"
+  - "https://raw.githubusercontent.com/wvk2017/test-app/refs/heads/main/gofractal/images/1.png"
+  - "https://raw.githubusercontent.com/wvk2017/test-app/refs/heads/main/gofractal/images/1.png"
 path: ""
 defaultUsername: ""
 defaultPassword: ""
@@ -82,4 +85,4 @@ submitter: wvk2017
   - data/node/blocks
   - data/node/chainstate
   - data/node/indexes
-submitter: Ellevix
+submitter: wvk2017
