@@ -16,6 +16,7 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - ${APP_DATA_DIR}:/appdata
+      - ${APP_DATA_DIR}/data/templates:/data/templates:rw
     environment:
       APPS_SUBNET: "${NETWORK_IP}/16"
       RPC_USER: "fractal"
@@ -48,7 +49,7 @@ services:
           mv "$$tmp" "$$envfile"
         fi
 
-        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/templates
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
 
         # The host may create settings.yml as root during update/install; ensure it stays writable.
         touch /appdata/settings.yml
@@ -164,7 +165,7 @@ services:
         fi
 
   fractal:
-    image: ellevix/fractald:0.3.0
+    image: https://github.com/wvk2017/fractal-bitcoin
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -173,7 +174,17 @@ services:
     ports:
       - "32126:32126/tcp" # P2P
     volumes:
-      - ${APP_DATA_DIR}/data/node:/data
+     - ${APP_DATA_DIR}/data/pool/config:/config:ro
+      - ${APP_DATA_DIR}/data/pool/www:/www
+      - ${APP_DATA_DIR}/data/templates/ckpool-entrypoint.sh:/ckpool-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/ckpool-entrypoint.sh"]
+
+    healthcheck:
+      test: ["CMD-SHELL", "bitcoin-cli -datadir=/data getblockchaininfo >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 2m
 
   ckpool:
     image: ghcr.io/getumbrel/docker-ckpool-solo:590fb2a
@@ -233,7 +244,7 @@ services:
       NODE_RPC_PORT: "32123"
       NODE_RPC_USER: "fractal"
       NODE_RPC_PASS: "${APP_PASSWORD}"
-      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
+      CKPOOL_STATUS_DIR: "data/pool/www/pool"
       APP_CHANNEL: "STABLE"
       BCHN_IMAGE: "ellevix/fractald:0.3.0"
       CKPOOL_IMAGE: "ghcr.io/getumbrel/docker-ckpool-solo:590fb2a"
