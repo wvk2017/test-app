@@ -1,0 +1,50 @@
+version: "3.7"
+
+services:
+
+  app_proxy:
+    environment:
+      APP_HOST: engine
+      APP_PORT: 8080
+      JWT_SECRET: "${JWT_SECRET}"
+    networks:
+      - umbrel_main_network
+
+  init-permissions:
+    image: alpine:3.19
+    command: >
+      sh -c "mkdir -p /data/pool/logs &&
+             mkdir -p /shared/gostratacore/coins &&
+             chown -R 1000:1000 /data /shared"
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+      - /var/lib/5tratumos/shared:/shared
+    restart: "no"
+
+  engine:
+    user: "1000:1000"
+    image: ghcr.io/gostratacore/gostratumengine:1.6.1
+    restart: unless-stopped
+
+    depends_on:
+      init-permissions:
+        condition: service_completed_successfully
+
+    ports:
+      - "3333:3333"
+      - "8080:8080"
+
+    volumes:
+      - ${APP_DATA_DIR}/data/pool/logs:/pool/logs
+      - /var/lib/5tratumos/shared/gostratacore/coins:/pool/coins
+
+    environment:
+      - APP_DATA_DIR=${APP_DATA_DIR}
+
+    networks:
+      - umbrel_main_network
+
+networks:
+  umbrel_main_network:
+    external: true
+    name: umbrel_main_network

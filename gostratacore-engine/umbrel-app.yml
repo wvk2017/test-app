@@ -1,0 +1,27 @@
+manifestVersion: 1
+id: gostratacore-engine
+category: bitcoin
+name: GSC Engine
+version: "1.6.1"
+tagline: Multi-coin Stratum mining engine
+
+description: >-
+  GoStrataCore Engine provides a lightweight Stratum mining server
+  capable of running multi-coin solo mining pools.
+
+developer: GoStrataCore
+website: https://github.com/GoStrataCore/gostratumengine
+repo: https://github.com/GoStrataCore/gostratumengine
+support: https://github.com/GoStrataCore/gostratumengine
+
+dependencies: []
+port: 8080
+
+icon: icon.png
+gallery: []
+
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+
+submitter: GoStrataCore
