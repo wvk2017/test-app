@@ -52,7 +52,7 @@ services:
           else
             FILE=fractald-0.2.9rc2-x86_64-linux-gnu.tar.gz
           fi
-          URL=https://github.com/fractal-bitcoin/fractald-release/releases/download/v0.2.9rc2/$$FILE
+          URL=https://github.com/fractal-bitcoin/fractald-release/releases/v0.2.9rc2/$$FILE
           wget -q -O /tmp/fractald.tar.gz $$URL
           tar -xzf /tmp/fractald.tar.gz -C /tmp
           mv /tmp/fractald-0.2.9rc2-*/  /opt/fractal/
