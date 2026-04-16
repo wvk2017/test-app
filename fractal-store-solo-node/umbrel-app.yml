@@ -15,11 +15,11 @@ description: >-
   peer count, and copy-paste commands to connect any SHA-256 ASIC miner.
 
   Features:
-  ‣ Auto-downloads official fractald binary (v0.2.9, ARM + x86 supported)
+  ‣ Auto-downloads official fractald binary (v0.3.0), ARM + x86 supported)
   ‣ Full Fractal Bitcoin mainnet node with RPC on port 10332
   ‣ Supports merged mining (AuxPoW, ChainID 0x2024)
   ‣ Dashboard showing live block height, sync %, peers, difficulty
-  ‣ Pruned mode (~10 GB) — configurable to full archival
+  ‣ Pruned mode (~5 GB) — configurable to full archival
 
   Requirements: ~10 GB free disk, ~512 MB RAM minimum.
   Initial blockchain sync takes several hours.
