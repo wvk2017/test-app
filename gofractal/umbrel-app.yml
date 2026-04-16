@@ -1,8 +1,8 @@
 manifestVersion: 1
-id: gofractal
+id: wvk2017
 category: bitcoin
 name: GoFractal
-version: "0.3.52"
+version: "0.3.53"
 tagline: Fractal node + solo pool
 description: >-
   Run a Fractal Bitcoin full node and an integrated solo Stratum v1 pool (ckpool) as a single app.
@@ -78,6 +78,7 @@ widgets:
           text: "21"
           subtext: "G"
 backupIgnore:
+submitter: wvk2017
   - data/node/blocks
   - data/node/chainstate
   - data/node/indexes
