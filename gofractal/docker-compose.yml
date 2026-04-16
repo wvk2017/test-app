@@ -164,7 +164,7 @@ services:
         fi
 
   fractal:
-    image: ellevix/fractald:0.3.0
+    image: wvk2017/nodes:fractal-bitcoin
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
@@ -226,7 +226,6 @@ services:
           - gofractal-app
     volumes:
       - ${APP_DATA_DIR}/data:/data
-      - /var/lib/5tratumos/apps/gostratacore-engine:/var/lib/5tratumos/apps/gostratacore-engine  # 👈 ADD THIS LINE
     environment:
       NETWORK_IP: "${NETWORK_IP}"
       NODE_RPC_HOST: "fractal"
