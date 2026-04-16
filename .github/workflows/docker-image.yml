@@ -23,7 +23,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: wvk2017/app
+          images: wvk2017/nodes
 
       - name: Build and push Docker image
         id: push
@@ -32,6 +32,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: wvk2017/app:fb
+          tags: wvk2017/nodes:gofractal
           #tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
