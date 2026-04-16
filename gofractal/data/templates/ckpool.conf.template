@@ -8,7 +8,7 @@
     }
   ],
   "btcaddress": "${PAYOUT_ADDRESS}",
-  "btcsig": "/mined by Wvk on Umbrel AxeFB/",
+  "btcsig": "/mined by Wvk2017 on Umbrel/",
   "mindiff": 1,
   "startdiff": 16,
   "maxdiff": 0,
