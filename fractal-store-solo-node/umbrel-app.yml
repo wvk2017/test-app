@@ -2,7 +2,7 @@ manifestVersion: 1
 id: wvk2017
 category: bitcoin
 name: Fractal Bitcoin Node
-version: "0.3.2"
+version: "0.3.3"
 tagline: Run a Fractal Bitcoin full node for solo SHA-256 mining
 icon: https://raw.githubusercontent.com/wvk2017/test-app/7ee6ed513983f2c73633af29d5aff1430795dad4/fractal-store-solo-node/icon.svg
 description: >-
