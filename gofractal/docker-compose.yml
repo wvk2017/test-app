@@ -26,16 +26,16 @@ services:
       FRACTAL_ZMQ_HASHBLOCK_PORT: "32125"
       PAYOUT_ADDRESS: "CHANGEME_FRACTAL_PAYOUT_ADDRESS"
     command:
-      - /bin/sh
+   - /bin/sh
       - -ec
       - |-
         set -eu
 
-        apk add --no-cache envsubst curl >/dev/null
+        apk add --no-cache envsubst >/dev/null
 
         # Persist JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
         # (without exports.sh) don't boot app_proxy with an empty JWT_SECRET.
-        if [ -n "${JWT_SECRET:-}" ]; then
+        if [ -n "$${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
           tmp="/appdata/.env.tmp"
           if [ -f "$$envfile" ]; then
@@ -43,7 +43,7 @@ services:
           else
             : > "$$tmp"
           fi
-          printf "JWT_SECRET=%s\n" "${JWT_SECRET}" >> "$$tmp"
+          printf "JWT_SECRET=%s\n" "$$JWT_SECRET" >> "$$tmp"
           chmod 600 "$$tmp" || true
           chown 1000:1000 "$$tmp" || true
           mv "$$tmp" "$$envfile"
@@ -51,14 +51,13 @@ services:
 
         mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
 
+        # Ensure template scripts are executable (Windows checkouts can lose +x).
+        chmod +x /data/templates/bitcoind-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+        chown 1000:1000 /data/templates/bitcoind-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+
         # The host may create settings.yml as root during update/install; ensure it stays writable.
         touch /appdata/settings.yml
         chown 1000:1000 /appdata/settings.yml || true
-
-        # Cleanup from older broken installs (a directory with the script name).
-        if [ -d /data/templates/init-entrypoint.sh ]; then
-          rm -rf /data/templates/init-entrypoint.sh || true
-        fi
 
         if [ ! -f /data/node/bitcoin.conf ]; then
           envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
@@ -71,71 +70,6 @@ services:
             echo '' >> /data/node/bitcoin.conf
             echo 'maxconnections=256' >> /data/node/bitcoin.conf
           fi
-
-          # Ensure RPC is reachable from other containers (app + ckpool).
-          # Older installs may have rpcbind=127.0.0.1 or missing rpcallowip for the apps subnet,
-          # which can present as "connection refused" from the UI or pool services.
-          conf="/data/node/bitcoin.conf"
-          if ! awk -v apps="$$APPS_SUBNET" 'BEGIN{seenBind=0; seenApps=0}
-            /^[[]/{exit}
-            $$0=="rpcbind=0.0.0.0"{seenBind=1}
-            apps!="" && $$0==("rpcallowip=" apps){seenApps=1}
-            END{exit(seenBind && seenApps ? 0 : 1)}
-          ' "$$conf"; then
-            echo "[gofractal] Ensuring RPC bind/access settings in bitcoin.conf"
-            awk -v apps="$$APPS_SUBNET" '
-              BEGIN{seenBind=0; seenLocal=0; seenApps=0; seen10=0; seen172=0; seen192=0; injected=0}
-              function mark_allow(line){
-                if(line=="rpcallowip=127.0.0.1/32") seenLocal=1
-                else if(apps!="" && line==("rpcallowip=" apps)) seenApps=1
-                else if(line=="rpcallowip=10.0.0.0/8") seen10=1
-                else if(line=="rpcallowip=172.16.0.0/12") seen172=1
-                else if(line=="rpcallowip=192.168.0.0/16") seen192=1
-              }
-              function emit_missing(){
-                if(seenBind==0){ print "rpcbind=0.0.0.0"; seenBind=1 }
-                if(seenLocal==0){ print "rpcallowip=127.0.0.1/32"; seenLocal=1 }
-                if(seenApps==0 && apps!=""){ print "rpcallowip=" apps; seenApps=1 }
-                if(seen10==0){ print "rpcallowip=10.0.0.0/8"; seen10=1 }
-                if(seen172==0){ print "rpcallowip=172.16.0.0/12"; seen172=1 }
-                if(seen192==0){ print "rpcallowip=192.168.0.0/16"; seen192=1 }
-              }
-              function maybe_inject(){
-                if(injected==1) return
-                if(seenBind==0 || seenLocal==0 || seenApps==0 || seen10==0 || seen172==0 || seen192==0){
-                  print ""
-                  print "# gofractal-rpc-access-v1"
-                  print "# Ensure RPC is reachable from other containers (app + pool)"
-                  emit_missing()
-                  print ""
-                }
-                injected=1
-              }
-              /^[[]/{
-                maybe_inject()
-                print
-                next
-              }
-              /^rpcbind=/{
-                if(seenBind==0){ print "rpcbind=0.0.0.0"; seenBind=1 }
-                next
-              }
-              /^rpcallowip=/{
-                mark_allow($$0)
-                print
-                next
-              }
-              {
-                print
-                if(seenBind==0 && $$0 ~ /^rpcpassword=/){
-                  print "rpcbind=0.0.0.0"; seenBind=1
-                }
-                next
-              }
-              END{ maybe_inject() }
-            ' "$$conf" > "$$conf.tmp" && mv "$$conf.tmp" "$$conf"
-          fi
-
           chown 1000:1000 /data/node/bitcoin.conf || true
         fi
 
@@ -143,6 +77,8 @@ services:
           envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
           chown -R 1000:1000 /data/pool
         else
+          # Upgrade safety: older installs may have a ckpool.conf without webdir/userdir,
+          # which prevents ckpool from writing per-user/worker stats (UI shows 0 workers).
           needs_ckpool_regen=0
           if ! grep -q '"btcaddress"' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
@@ -153,9 +89,19 @@ services:
           if ! grep -q '"userdir"' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
           fi
+          # Upgrade safety: remove legacy merged-mining config (AxeBTCF).
+          if grep -q '"auxd"' /data/pool/config/ckpool.conf; then
+            needs_ckpool_regen=1
+          fi
+          if grep -q '"auxaddress"' /data/pool/config/ckpool.conf; then
+            needs_ckpool_regen=1
+          fi
+          if grep -q '/AxeBTCF/' /data/pool/config/ckpool.conf; then
+            needs_ckpool_regen=1
+          fi
           if [ "$$needs_ckpool_regen" -eq 1 ]; then
             existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf | head -n 1 | sed -E 's/.*\"btcaddress\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\1/' || true)"
-            if [ -n "$$existing_addr" ] && [ "$$existing_addr" != "CHANGEME_FRACTAL_PAYOUT_ADDRESS" ]; then
+            if [ -n "$$existing_addr" ] && [ "$$existing_addr" != "CHANGEME_FB_PAYOUT_ADDRESS" ]; then
               export PAYOUT_ADDRESS="$$existing_addr"
             fi
             mv /data/pool/config/ckpool.conf "/data/pool/config/ckpool.conf.bak.$(date +%s 2>/dev/null || echo 0)" || true
@@ -164,15 +110,18 @@ services:
           fi
         fi
 
+        if [ ! -f /data/pool/config/ckpool.args ]; then
+          echo "-B" > /data/pool/config/ckpool.args
+          chown 1000:1000 /data/pool/config/ckpool.args || true
+
 fractal:
     image: ellevix/fractald:0.3.0
     user: "1000:1000"
     restart: unless-stopped
+    stop_grace_period: 15m30s
     depends_on:
       init:
         condition: service_completed_successfully
-    ports:
-      - "32126:32126/tcp" # P2P
     volumes:
       - ${APP_DATA_DIR}/data/node:/data
       - ${APP_DATA_DIR}/data/templates/bitcoind-entrypoint.sh:/bitcoind-entrypoint.sh:ro
@@ -188,18 +137,17 @@ fractal:
     image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
     user: "1000:1000"
     depends_on:
-      - fractal
+      - bitcoind
     restart: on-failure
     stop_grace_period: 30s
     ports:
       - "4568:3333/tcp"
     volumes:
-      volumes:
       - ${APP_DATA_DIR}/data/pool/config:/config:ro
       - ${APP_DATA_DIR}/data/pool/www:/www
       - ${APP_DATA_DIR}/data/templates/ckpool-entrypoint.sh:/ckpool-entrypoint.sh:ro
     entrypoint: ["/bin/sh", "/ckpool-entrypoint.sh"]
-
+    
   app:
     image: ghcr.io/gostratacore/gofractal-app:0.3.77
     user: "1000:1000"
@@ -223,10 +171,6 @@ fractal:
           - gofractal-app
     volumes:
       - ${APP_DATA_DIR}/data:/data
-      - ${APP_DATA_DIR}/data/pool/config:/config
-      - ${APP_DATA_DIR}/data:/data
-      - /var/lib/5tratumos/shared:/shared
-      - /var/lib/5tratumos/apps/gostratacore-engine:/var/lib/5tratumos/apps/gostratacore-engine
     environment:
       NETWORK_IP: "${NETWORK_IP}"
       NODE_RPC_HOST: "fractal"
