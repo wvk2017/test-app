@@ -4,7 +4,7 @@ name: Nitocoin (NITO) Node
 tagline: Nitocoin Node. This is a general node app for Wojakcoin and can be used to in conjunction with mining pool software to solo mine, or just be ran standalone to help contribute to the Wojakcoin network.
 icon: https://miningpoolstats.stream/ico/nitocoin.webp
 category: Mining Nodes
-version: "1.1.0"
+version: "1.2.0"
 port: 5021
 description: |
   Nitocoin Node. This is a general node app for Wojakcoin and can be used to in conjunction with mining pool software to solo mine, or just be ran standalone to help contribute to the Wojakcoin network.
