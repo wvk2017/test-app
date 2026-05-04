@@ -1,10 +1,10 @@
 manifestVersion: 1
-id: retro-mike-nito-node
+id: wvk2017
 name: Nitocoin (NITO) Node
 tagline: Nitocoin Node. This is a general node app for Wojakcoin and can be used to in conjunction with mining pool software to solo mine, or just be ran standalone to help contribute to the Wojakcoin network.
 icon: https://miningpoolstats.stream/ico/nitocoin.webp
 category: Mining Nodes
-version: "1.0.0"
+version: "1.1.0"
 port: 5021
 description: |
   Nitocoin Node. This is a general node app for Wojakcoin and can be used to in conjunction with mining pool software to solo mine, or just be ran standalone to help contribute to the Wojakcoin network.
@@ -13,12 +13,12 @@ description: |
 
   https://throne.com/retromike
 
-developer: Retro Mike
+developer: wvk2017
 website: http://retromiketech.com
-submitter: Retro Mike
-submission: https://github.com/TheRetroMike/Nito-core
-repo: https://github.com/TheRetroMike/Nito-core
-support: https://github.com/TheRetroMike/Nito-core
+submitter: wvk2017
+submission: https://github.com/wvk2017/Nito-core
+repo: https://github.com/wvk2017/Nito-core
+support: https://github.com/wvk2017/Nito-core
 gallery:
   - icon: https://miningpoolstats.stream/ico/nitocoin.webp
 releaseNotes: >-
