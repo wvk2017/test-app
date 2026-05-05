@@ -1,10 +1,10 @@
 manifestVersion: 1
-id: retro-mike-wjk-node
+id: wvk2017
 name: Wojakcoin (WJK) Node
 tagline: Wojakcoin Node. This is a general node app for Wojakcoin and can be used to in conjunction with mining pool software to solo mine, or just be ran standalone to help contribute to the Wojakcoin network.
 icon: https://wojakcoin.cash/wojak-logo.png
 category: Mining Nodes
-version: "1.2.0"
+version: "1.2.1"
 port: 5018
 description: |
   Wojakcoin Node. This is a general node app for Wojakcoin and can be used to in conjunction with mining pool software to solo mine, or just be ran standalone to help contribute to the Wojakcoin network.
@@ -13,12 +13,12 @@ description: |
 
   https://throne.com/retromike
 
-developer: Retro Mike
-website: http://retromiketech.com
-submitter: Retro Mike
-submission: https://github.com/TheRetroMike/wojakcore
-repo: https://github.com/TheRetroMike/wojakcore
-support: https://github.com/TheRetroMike/wojakcore
+developer: wvk2017
+website: http://wvk2017.nl
+submitter: wvk2017
+submission: https://github.com/wvk2017/wojakcore
+repo: https://github.com/wvk2017/wojakcore
+support: https://github.com/wvk2017/wojakcore
 gallery:
   - https://wojakcoin.cash/wojak-logo.png
 releaseNotes: >-
