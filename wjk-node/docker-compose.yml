@@ -14,7 +14,7 @@ services:
     depends_on:
       - node
   node:
-    image: theretromike/nodes:wojak
+    image: wvk2017/nodes:wojak
     restart: on-failure
     stop_grace_period: 1m
     volumes:
