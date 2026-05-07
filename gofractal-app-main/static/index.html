@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="icon.png" />
+    <title>GoFractal v__APP_VERSION__</title>
+    <link rel="stylesheet" href="app.css?v=__APP_VERSION__" />
+    <script defer src="app.js?v=__APP_VERSION__"></script>
+    <style>
+      .axe-pill--beta {
+        border-color: rgba(251, 191, 36, 0.25);
+        background-color: rgba(251, 191, 36, 0.12);
+        color: rgb(251, 191, 36);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-axe-950 text-slate-100">
+    <div class="mx-auto max-w-6xl p-5 md:p-8">
+      <header class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="axe-icon axe-icon--thumb">
+            <div class="axe-icon__inner">
+              <img class="axe-icon__img" src="icon.png" alt="GoFractal" />
+            </div>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="text-2xl font-extrabold tracking-tight">GoFractal v__APP_VERSION__</div>
+              <span id="channel-pill" class="axe-pill">__APP_CHANNEL__</span>
+            </div>
+            <div class="text-sm text-slate-300">Fractal Node + Solo Pool</div>
+          </div>
+        </div>
+        <div class="hidden items-center gap-2 md:flex">
+          <span id="status-pill" class="axe-pill">Loading...</span>
+        </div>
+      </header>
+
+      <div class="mt-6 flex items-center justify-between">
+        <div class="axe-tabs">
+          <button id="tab-home" class="axe-tab axe-tab--active" type="button">Home</button>
+          <button id="tab-pool" class="axe-tab" type="button">Pool</button>
+          <button id="tab-blocks" class="axe-tab" type="button">Blocks</button>
+          <button id="tab-settings" class="axe-tab" type="button">Settings</button>
+        </div>
+        <div class="hidden text-xs text-slate-400 md:block">
+          Changes require an app restart to apply.
+        </div>
+      </div>
+
+      <main id="view-home" class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section class="axe-card lg:col-span-2">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="text-sm text-slate-300">Blockchain</div>
+              <div class="mt-1 text-3xl font-extrabold tracking-tight">
+                <span id="sync-text">-</span>
+              </div>
+              <div class="mt-2 text-sm text-slate-300" id="sync-subtext">-</div>
+              <div class="mt-1 flex flex-wrap gap-2 text-xs text-slate-400" id="sync-badges"></div>
+              <div class="mt-2 text-xs text-slate-300 hidden" id="sync-eta"></div>
+              <div class="mt-2 text-xs text-slate-300 hidden" id="last-block"></div>
+              <div class="mt-2 text-xs text-amber-300 hidden" id="sync-warnings"></div>
+            </div>
+            <div class="axe-ring">
+              <svg viewBox="0 0 120 120" class="h-28 w-28">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0" y1="1" x2="1" y2="0">
+                    <stop offset="0" stop-color="#00e5ff" />
+                    <stop offset="0.5" stop-color="#ff2bd6" />
+                    <stop offset="1" stop-color="#ff9a00" />
+                  </linearGradient>
+                </defs>
+                <circle cx="60" cy="60" r="48" stroke="#1f2937" stroke-width="10" fill="none" />
+                <circle id="ring" cx="60" cy="60" r="48" stroke="url(#ringGrad)" stroke-width="10" fill="none"
+                  stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6" />
+                <text id="ring-label" x="60" y="66" text-anchor="middle" class="fill-slate-100" style="font-weight:800;font-size:22px;">-%</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-6">
+            <div class="axe-stat">
+              <div class="axe-stat__k">Blocks</div>
+              <div class="axe-stat__v" id="blocks">-</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">Headers</div>
+              <div class="axe-stat__v" id="headers">-</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">Chain lag</div>
+              <div class="axe-stat__v" id="chain-lag">-</div>
+              <div class="axe-stat__k mt-1 text-slate-400" id="chain-lag-sub">blocks behind / ahead</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">Peers</div>
+              <div class="axe-stat__v" id="peers">-</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">Mempool</div>
+              <div class="axe-stat__v" id="mempool">-</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">Disk</div>
+              <div class="axe-stat__v" id="disk">-</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="axe-card">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="text-sm text-slate-300">Solo Pool</div>
+              <div class="mt-1 text-2xl font-extrabold tracking-tight">Stratum v1</div>
+              <div class="mt-2 text-sm text-slate-300">Port <span class="font-mono">4568</span></div>
+            </div>
+            <button id="go-pool" class="axe-btn" type="button">Open Pool</button>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-3">
+            <div class="axe-stat">
+              <div class="axe-stat__k">Workers</div>
+              <div class="axe-stat__v" id="workers-summary">-</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">Hashrate</div>
+              <div class="axe-stat__v" id="hashrate-summary">-</div>
+              <div class="axe-stat__k mt-1">TH/s (best-effort)</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">Network difficulty</div>
+              <div class="axe-stat__v" id="network-difficulty-summary">-</div>
+              <div class="axe-stat__k mt-1 text-slate-400" id="network-difficulty-summary-sub">-</div>
+            </div>
+            <div class="axe-stat">
+              <div class="axe-stat__k">ETA to find block</div>
+              <div class="axe-stat__v" id="eta-summary">-</div>
+              <div class="axe-stat__k mt-1 text-slate-400">Based on pool hashrate</div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <main id="view-pool" class="mt-4 hidden">
+        <section class="axe-card">
+          <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div class="text-sm text-slate-300">Solo Pool</div>
+              <div class="mt-1 text-2xl font-extrabold tracking-tight">Stratum v1</div>
+              <div class="mt-2 text-sm text-slate-300">Connect miners to <span class="font-mono" id="stratum-url">stratum+tcp://&lt;node-ip&gt;:4568</span></div>
+            </div>
+            <div class="axe-field axe-field--compact">
+              <label class="axe-label" for="trail">Trail</label>
+              <select id="trail" class="axe-input">
+                <option value="30m">30m</option>
+                <option value="6h">6h</option>
+                <option value="1d">1d</option>
+                <option value="3d">3d</option>
+                <option value="6d">6d</option>
+                <option value="7d">7d</option>
+              </select>
+              <div class="axe-help">Graph history window.</div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div class="lg:col-span-1">
+              <div class="grid grid-cols-1 gap-3">
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Workers</div>
+                  <div class="axe-stat__v" id="workers">-</div>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Last share</div>
+                  <div class="axe-stat__v" id="last-share">-</div>
+                  <div class="axe-stat__k mt-1">across all workers</div>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Hashrate</div>
+                  <div class="axe-stat__v" id="hashrate">-</div>
+                  <div class="axe-stat__k mt-1">TH/s (best-effort)</div>
+                  <div class="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+                    <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">1m</div>
+                      <div class="axe-shadow-heavy mt-1 font-mono text-sm text-white" id="hashrate-1m">-</div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">5m</div>
+                      <div class="axe-shadow-heavy mt-1 font-mono text-sm text-white" id="hashrate-5m">-</div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">15m</div>
+                      <div class="axe-shadow-heavy mt-1 font-mono text-sm text-white" id="hashrate-15m">-</div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">1h</div>
+                      <div class="axe-shadow-heavy mt-1 font-mono text-sm text-white" id="hashrate-1h">-</div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">6h</div>
+                      <div class="axe-shadow-heavy mt-1 font-mono text-sm text-white" id="hashrate-6h">-</div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">24h</div>
+                      <div class="axe-shadow-heavy mt-1 font-mono text-sm text-white" id="hashrate-1d">-</div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">7d</div>
+                      <div class="axe-shadow-heavy mt-1 font-mono text-sm text-white" id="hashrate-7d">-</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Network difficulty</div>
+                  <div class="axe-stat__v" id="network-difficulty">-</div>
+                  <div class="axe-stat__k mt-1" id="network-difficulty-sub">-</div>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Best share</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <div class="rounded-xl border border-white/10 bg-black/35 px-3 py-2">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+                        <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">Since block</div>
+                        <button id="bestshare-reset-open" type="button" class="axe-btn axe-btn--ghost" style="padding:.35rem .6rem;font-size:.75rem;">Reset</button>
+                      </div>
+                      <div class="axe-shadow-heavy mt-1 text-2xl font-extrabold tracking-tight text-white" id="bestshare-since">-</div>
+                      <div class="mt-1 truncate text-xs text-slate-400" id="bestshare-since-worker">-</div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-black/35 px-3 py-2">
+                      <div class="axe-shadow-heavy text-[10px] font-extrabold uppercase tracking-wider text-slate-200">All-time</div>
+                      <div class="axe-shadow-heavy mt-1 text-2xl font-extrabold tracking-tight text-white" id="bestshare-alltime">-</div>
+                      <div class="mt-1 truncate text-xs text-slate-400" id="bestshare-alltime-worker">-</div>
+                    </div>
+                  </div>
+                  <div class="axe-stat__k mt-1 text-slate-400">Highest share difficulty seen (not a guaranteed winning share).</div>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">ETA to find block</div>
+                  <div class="axe-stat__v" id="eta">-</div>
+                  <div class="axe-stat__k mt-1 text-slate-400">Based on pool hashrate</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-2">
+              <div class="grid grid-cols-1 gap-3">
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Workers</div>
+                  <canvas id="chart-workers" class="mt-2 w-full rounded-xl bg-black/30" height="84"></canvas>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Hashrate (TH/s)</div>
+                  <canvas id="chart-hashrate" class="mt-2 w-full rounded-xl bg-black/30" height="110"></canvas>
+                  <div class="mt-3 grid grid-cols-2 gap-2 text-xs md:grid-cols-4">
+                    <div class="flex items-center justify-between gap-2 rounded-xl px-3 py-2 shadow-sm ring-1 ring-black/10" style="background:#00e5ff">
+                      <span class="font-mono font-extrabold text-white" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">1m</span>
+                      <span class="font-mono font-extrabold text-white" id="legend-1m" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">-</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 rounded-xl px-3 py-2 shadow-sm ring-1 ring-black/10" style="background:#ff2bd6">
+                      <span class="font-mono font-extrabold text-white" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">5m</span>
+                      <span class="font-mono font-extrabold text-white" id="legend-5m" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">-</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 rounded-xl px-3 py-2 shadow-sm ring-1 ring-black/10" style="background:#ff9a00">
+                      <span class="font-mono font-extrabold text-white" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">15m</span>
+                      <span class="font-mono font-extrabold text-white" id="legend-15m" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">-</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 rounded-xl px-3 py-2 shadow-sm ring-1 ring-black/10" style="background:#22c55e">
+                      <span class="font-mono font-extrabold text-white" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">1h</span>
+                      <span class="font-mono font-extrabold text-white" id="legend-1h" style="text-shadow: 0 1px 2px rgba(0,0,0,0.55)">-</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Network difficulty</div>
+                  <canvas id="chart-netdiff" class="mt-2 w-full rounded-xl bg-black/30" height="84"></canvas>
+                </div>
+                <div class="axe-stat">
+                  <div class="axe-stat__k">Workers (details)</div>
+                  <div class="mt-2 text-xs text-slate-400" id="worker-details-status">Loading...</div>
+                  <div class="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                      <input id="workers-show-inactive" type="checkbox" class="h-3 w-3" />
+                      <span>Show inactive (24h)</span>
+                    </label>
+                    <div class="ml-auto flex items-center gap-2 text-[10px] tracking-[0.12em] uppercase text-slate-500">
+                      <span class="text-slate-500">Odds</span>
+                      <div id="odds-window" class="axe-odds-toggle" role="group" aria-label="Odds window">
+                        <button type="button" class="axe-odds-toggle__btn" data-window="7d">7D</button>
+                        <button type="button" class="axe-odds-toggle__btn" data-window="1m">1M</button>
+                        <button type="button" class="axe-odds-toggle__btn" data-window="1y">1Y</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-2 overflow-hidden rounded-xl border border-white/10">
+                    <div id="worker-details-rows" class="axe-worker-list"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="axe-card mt-4">
+          <div class="text-sm text-slate-300">Setup</div>
+          <div class="mt-1 text-lg font-bold">Miner configuration</div>
+          <div class="mt-4 grid grid-cols-1 gap-3">
+            <div class="axe-note">
+              <div class="axe-note__k">URL</div>
+              <div class="axe-note__v font-mono" id="stratum-url-note">stratum+tcp://&lt;node-ip&gt;:4568</div>
+            </div>
+            <div class="axe-note">
+              <div class="axe-note__k">Payout</div>
+              <div class="axe-note__v min-w-0 break-all font-mono leading-snug" id="payout-address">not set</div>
+            </div>
+              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div class="axe-note">
+                <div class="axe-note__k">Worker</div>
+                <div class="axe-note__v min-w-0 break-all font-mono leading-snug" id="miner-username">worker-name</div>
+                </div>
+                <div class="axe-note">
+                  <div class="axe-note__k">Password</div>
+                  <div class="axe-note__v font-mono">anything</div>
+                </div>
+              </div>
+            </div>
+          <div class="mt-3 text-sm text-slate-400">Set your payout address in Settings. All solved blocks pay directly to that address.</div>
+          <div id="payout-warning" class="mt-3 hidden rounded-xl border border-red-500/25 bg-red-950/30 px-3 py-2 text-sm text-red-200">
+            Payout address not set. The pool will not start until you set one in Settings.
+          </div>
+        </section>
+
+      </main>
+
+      <main id="view-blocks" class="mt-4 hidden">
+        <section class="axe-card">
+          <div class="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div class="text-sm text-slate-300">Blocks</div>
+              <div class="mt-1 text-lg font-bold">Blocks found (solo)</div>
+              <div class="mt-1 text-sm text-slate-400">History from your local solo pool.</div>
+            </div>
+            <div id="blocks-status" class="text-sm text-slate-400"></div>
+          </div>
+
+          <div class="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center gap-3">
+              <label id="backscan-toggle-wrap" class="flex items-center gap-2 text-sm text-slate-300">
+                <input id="backscan-enabled" type="checkbox" class="h-4 w-4 rounded border-white/15 bg-black/40 text-emerald-500 focus:ring-2 focus:ring-emerald-500/30" />
+                <span>History scan (manual)</span>
+              </label>
+              <select id="backscan-from-month" class="axe-input text-sm" style="width: 11.5rem">
+                <option value="">Since install</option>
+              </select>
+              <select id="backscan-speed" class="axe-input text-sm" style="width: 12.5rem">
+                <option value="slow">Light (25 blocks / 10s)</option>
+                <option value="normal">Balanced (100 blocks / 2s)</option>
+                <option value="fast">Fast (500 blocks / no delay)</option>
+                <option value="unlimited">Unlimited (2000 blocks / no delay)</option>
+              </select>
+              <div id="backscan-progress" class="text-xs text-slate-400"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="backscan-rescan" class="axe-btn hidden" type="button">Rescan history</button>
+              <button id="backscan-reset" class="axe-btn hidden" type="button">Reset &amp; rescan</button>
+            </div>
+          </div>
+
+          <div class="mt-2 text-xs text-slate-500">
+            Start month is optional. Light is safest on small disks; Fast increases disk IO while scanning.
+          </div>
+
+          <div class="mt-6 overflow-hidden rounded-xl border border-white/10">
+            <div class="grid grid-cols-12 gap-2 bg-black/35 px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-slate-300">
+              <div class="col-span-3">Time</div>
+              <div class="col-span-2">Height</div>
+              <div class="col-span-2">Status</div>
+              <div class="col-span-5">Miner</div>
+            </div>
+            <div id="blocks-rows" class="divide-y divide-white/10"></div>
+          </div>
+
+          <div class="mt-3 text-xs text-slate-500">Tip: use the Pool tab to watch hashrate and worker activity. This tab only changes when blocks are found.</div>
+        </section>
+      </main>
+
+      <main id="view-settings" class="mt-4 hidden">
+        <section class="axe-card">
+          <div class="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div class="text-sm text-slate-300">Node settings</div>
+              <div class="mt-1 text-lg font-bold">Network, pruning, indexes</div>
+              <div class="mt-1 text-sm text-slate-400">Saving updates `bitcoin.conf`. Restart the app after saving.</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <a class="axe-btn" href="https://discord.gg/vC2UrFAbUF" target="_blank" rel="noreferrer">Discord</a>
+              <div id="settings-status" class="text-sm text-slate-400"></div>
+            </div>
+          </div>
+
+          <form id="settings-form" class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="axe-field">
+              <label class="axe-label" for="network">Network</label>
+              <select id="network" class="axe-input">
+                <option value="mainnet">Mainnet</option>
+                <option value="testnet">Testnet</option>
+                <option value="regtest">Regtest</option>
+              </select>
+              <div class="axe-help">Pick testnet/regtest for validation and development.</div>
+            </div>
+
+            <div class="axe-field">
+              <label class="axe-label" for="prune">Pruning</label>
+              <input id="prune" class="axe-input" type="number" min="0" step="1" />
+              <div class="axe-help"><span class="font-mono">0</span> = full archival, or <span class="font-mono">550</span>+ MiB target for pruned mode.</div>
+            </div>
+
+            <div class="axe-field md:col-span-2">
+              <button class="axe-btn" type="submit">Save settings</button>
+              <div class="mt-2 text-xs text-slate-400">After saving: restart the app from 5tratumOS to apply changes.</div>
+            </div>
+          </form>
+        </section>
+
+<section class="axe-card mt-4">
+  <div class="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+    <div>
+      <div class="text-sm text-slate-300">Pool settings</div>
+      <div class="mt-1 text-lg font-bold">Solo payout address</div>
+      <div class="mt-1 text-sm text-slate-400">
+        This is the address ckpool uses when generating blocks. Restart the app after saving.
+      </div>
+    </div>
+    <div id="pool-settings-status" class="text-sm text-slate-400"></div>
+  </div>
+
+  <form id="pool-settings-form" class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+
+    <div class="axe-field md:col-span-2">
+      <label class="axe-label" for="payoutAddress">Payout address</label>
+      <input id="payoutAddress" class="axe-input font-mono" type="text" placeholder="bc1..., 1..., or 3..." />
+
+      <div class="axe-help">
+        Use a Fractal Bitcoin payout address. Supported formats include
+        <span class="font-mono">bc1q...</span>,
+        <span class="font-mono">bc1p...</span>,
+        <span class="font-mono">1...</span>, and
+        <span class="font-mono">3...</span>.
+        The address will be validated by the connected Fractal node before saving.
+      </div>
+    </div>
+
+            <div class="axe-field md:col-span-2">
+              <div class="mt-2 text-sm text-slate-300">Difficulty (vardiff)</div>
+              <div class="mt-1 text-sm text-slate-400">
+                ckpool adjusts share difficulty per miner to keep share rates reasonable. Pick a preset based on your largest miner (Fast share rates can overwhelm the pool if difficulty is too low).
+              </div>
+              <div class="mt-1 text-sm text-slate-400">
+                Presets are per miner, not your total fleet hashrate. Use the band that each device sits in. Setting difficulty too high will not help find blocks. It just reduces how often shares are submitted and can waste hashing effort.
+              </div>
+            </div>
+
+            <div class="axe-field md:col-span-2">
+              <label class="axe-label" for="vardiffPreset">Preset</label>
+              <select id="vardiffPreset" class="axe-input">
+                <option value="mixed">Mixed (recommended)</option>
+                <option value="micro">Micro miners (kH/s-MH/s)</option>
+                <option value="small">Small miners (MH/s-GH/s)</option>
+                <option value="home">Home ASICs (1-20 TH/s)</option>
+                <option value="farm">Farm (20-200 TH/s)</option>
+                <option value="mega">Mega (200-500+ TH/s)</option>
+                <option value="custom">Custom</option>
+              </select>
+              <div class="axe-help">Whole-number difficulties only (ckpool). Changing difficulty requires an app restart.</div>
+            </div>
+
+            <div class="axe-field">
+              <label class="axe-label" for="mindiff">Min diff</label>
+              <input id="mindiff" class="axe-input font-mono" type="number" min="1" step="1" />
+              <div class="axe-help">Lowest difficulty ckpool will assign (whole numbers only; minimum 1).</div>
+            </div>
+            <div class="axe-field">
+              <label class="axe-label" for="startdiff">Start diff</label>
+              <input id="startdiff" class="axe-input font-mono" type="number" min="1" step="1" />
+              <div class="axe-help">Initial difficulty for new miners (whole numbers only; minimum 1).</div>
+            </div>
+            <div class="axe-field">
+              <label class="axe-label" for="maxdiff">Max diff</label>
+              <input id="maxdiff" class="axe-input font-mono" type="number" min="0" step="1" />
+              <div class="axe-help"><span class="font-mono">0</span> means no limit.</div>
+            </div>
+
+            <div class="axe-field md:col-span-2">
+              <button class="axe-btn" type="submit">Save pool settings</button>
+              <div class="mt-2 text-xs text-slate-400">After saving: restart the app from 5tratumOS to apply changes.</div>
+            </div>
+          </form>
+        </section>
+
+        <section class="axe-card mt-4" id="support-section">
+          <div class="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div class="text-sm text-slate-300">Support</div>
+              <div class="mt-1 text-lg font-bold">Get help on Discord</div>
+              <div class="mt-1 text-sm text-slate-400">Join Discord for help and to share diagnostics.</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <a class="axe-btn" href="https://discord.gg/vC2UrFAbUF" target="_blank" rel="noreferrer">Open Discord</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="axe-card mt-4" id="coffee-section">
+          <div class="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+            <div class="flex w-full items-start gap-3">
+              <div class="min-w-0 flex-1">
+                <div class="mt-1 text-lg font-bold">Buy me a donut &#x1F369;</div>
+                <div class="mt-2 space-y-1 text-sm text-slate-400">
+                  <p>GoDGB and GoFractal are free apps. I don't take a percentage, skim rewards, or touch your coins.</p>
+                  <p>You run your own private node, exactly as it should be.</p>
+                  <p>If you like that approach, consider a coffee or donut donation.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div class="axe-note">
+              <div class="axe-note__k">Lightning</div>
+              <div class="axe-note__v break-all font-mono text-sm text-slate-100">
+                <span id="coffee-ln">lightning:staticrod559@walletofsatoshi.com</span>
+              </div>
+            </div>
+            <div class="axe-note">
+              <div class="axe-note__k">BTC</div>
+              <div class="axe-note__v break-all font-mono text-sm text-slate-100">bitcoin:bc1q0hvxhnvg3hku7fd9ht04araggpykq75xeq5xdx</div>
+            </div>
+            <div class="axe-note">
+              <div class="axe-note__k">BCH</div>
+              <div class="axe-note__v break-all font-mono text-sm text-slate-100">bitcoincash:qqnfrrqefddf2gexr5l8ey7t4y2qgpgrwcc6l3rgmr</div>
+            </div>
+            <div class="axe-note">
+              <div class="axe-note__k">DGB</div>
+              <div class="axe-note__v break-all font-mono text-sm text-slate-100">digibyte:dgb1qurt6nec48uc6uehj3492rlmlr74ghtazetdrt9</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="axe-card mt-4" id="community-section">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div class="text-sm text-slate-300">Community</div>
+              <div class="mt-1 text-lg font-bold">GoFractal Suite Facebook group</div>
+              <div class="mt-1 text-sm text-slate-400">Search answers and ask questions.</div>
+            </div>
+            <a
+              href="https://www.facebook.com/groups/axesuite"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="axe-btn"
+              style="display:inline-flex;align-items:center;gap:0.6rem;background:#1877f2;border-color:rgba(255,255,255,.12)"
+              aria-label="Open GoFractal Suite community on Facebook"
+              title="GoFractal Suite community"
+            >
+              <svg width="18" height="18" viewBox="0 0 320 512" aria-hidden="true" focusable="false">
+                <path
+                  fill="#ffffff"
+                  d="M279.14 288l14.22-92.66h-88.91V127.41c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"
+                />
+              </svg>
+              <span>Open Facebook</span>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="mt-8 text-center text-xs text-slate-500">
+        <div id="backend-info">Backend: loading...</div>
+        <div id="channel-warning" class="mt-1"></div>
+      </footer>
+    </div>
+
+    <!-- CashAddr conversion modal -->
+    <div
+      id="cashaddr-modal"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      style="position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);"
+    >
+      <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:1rem;">
+        <div style="width:min(44rem, calc(100vw - 2rem));">
+          <div class="axe-card" style="padding:0;border-color:rgba(255,255,255,0.10);">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;border-bottom:1px solid rgba(255,255,255,0.10);padding:1rem 1.25rem;">
+              <div>
+                <div class="text-sm text-slate-300">Address conversion</div>
+                <div class="mt-1 text-xl font-extrabold tracking-tight">CashAddr detected, converted to legacy</div>
+                <div class="mt-2 text-sm text-slate-300">
+                  ckpool requires a legacy BCH Base58 address (<span class="font-mono">1...</span>/<span class="font-mono">3...</span>). GoFractal converted your CashAddr locally on your 5tratumOS.
+                </div>
+                <div class="mt-2 text-sm text-slate-300">
+                  No address data is sent to <span class="font-mono">bch.info</span>. If you want to verify manually, use the reference converter:
+                  <a class="underline" href="https://bch.info/en/tools/cashaddr" target="_blank" rel="noreferrer">bch.info/en/tools/cashaddr</a>.
+                </div>
+              </div>
+              <button id="cashaddr-modal-close" type="button" class="axe-btn axe-btn--ghost shrink-0">Close</button>
+            </div>
+
+            <div style="padding:1rem 1.25rem;">
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div class="text-xs uppercase tracking-wide text-slate-400">CashAddr you entered</div>
+                  <div id="cashaddr-modal-cashaddr" class="mt-2 break-all font-mono text-sm text-slate-100"></div>
+                </div>
+                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div class="text-xs uppercase tracking-wide text-slate-400">Converted legacy address</div>
+                  <div id="cashaddr-modal-legacy" class="mt-2 break-all font-mono text-sm text-slate-100"></div>
+                </div>
+              </div>
+
+              <div class="mt-5" style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:flex-end;">
+                <button id="cashaddr-modal-copy" type="button" class="axe-btn">Copy converted address</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Block celebration modal -->
+    <div id="block-win-modal" class="hidden" role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);">
+      <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:1rem;">
+        <div style="width:min(42rem, calc(100vw - 2rem));">
+          <div class="axe-card block-win-card" style="border-color:rgba(34,197,94,.35);position:relative;overflow:hidden;">
+            <div id="block-win-confetti" aria-hidden="true" class="block-win-confetti"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+              <div>
+                <div class="text-sm text-slate-300">Solo pool</div>
+                <div class="mt-1 text-xl font-extrabold tracking-tight">Block found</div>
+                <div id="block-win-sub" class="mt-2 text-sm text-slate-300"></div>
+              </div>
+              <div style="display:flex;gap:.5rem;align-items:center;">
+                <button id="block-win-close" type="button" class="axe-btn axe-btn--ghost">Close</button>
+              </div>
+            </div>
+            <div class="mt-5 grid gap-3 md:grid-cols-2">
+              <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-400">Height</div>
+                <div id="block-win-height" class="mt-2 font-mono text-sm text-slate-100"></div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-400">Winner</div>
+                <div id="block-win-worker" class="mt-2 font-mono text-sm text-slate-100"></div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-400">Difficulty hit</div>
+                <div id="block-win-hit" class="mt-2 font-mono text-sm text-slate-100"></div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-400">Network difficulty</div>
+                <div id="block-win-net" class="mt-2 font-mono text-sm text-slate-100"></div>
+              </div>
+            </div>
+            <div class="mt-5 text-xs text-slate-400">
+              If this was discovered via history scan, it may have already confirmed on-chain.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action modal (Settings save flow) -->
+    <div
+      id="action-modal"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      style="position:fixed;inset:0;z-index:70;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);"
+    >
+      <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:1rem;">
+        <div style="width:min(44rem, calc(100vw - 2rem));">
+          <div class="axe-card" style="padding:0;border-color:rgba(255,255,255,0.10);">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;border-bottom:1px solid rgba(255,255,255,0.10);padding:1rem 1.25rem;">
+              <div>
+                <div id="action-modal-kicker" class="text-sm text-slate-300"></div>
+                <div id="action-modal-title" class="mt-1 text-xl font-extrabold tracking-tight"></div>
+              </div>
+              <button id="action-modal-x" type="button" class="axe-btn axe-btn--ghost shrink-0">Close</button>
+            </div>
+            <div style="padding:1rem 1.25rem;">
+              <div id="action-modal-body" class="text-sm text-slate-300 leading-snug"></div>
+              <div class="mt-6" style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:flex-end;">
+                <button id="action-modal-secondary" type="button" class="axe-btn axe-btn--ghost hidden">Secondary</button>
+                <button id="action-modal-primary" type="button" class="axe-btn hidden">Primary</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best share reset confirmation modal -->
+    <div
+      id="bestshare-reset-modal"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      style="position:fixed;inset:0;z-index:55;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);"
+    >
+      <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:1rem;">
+        <div style="width:min(44rem, calc(100vw - 2rem));">
+          <div class="axe-card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+              <div>
+                <div class="text-sm text-slate-300">Best share</div>
+                <div class="mt-1 text-xl font-extrabold tracking-tight">Reset &quot;Since block&quot;?</div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-sm text-slate-300 leading-snug">
+              <p>This resets &quot;Since block&quot; so it tracks the best share after the reset point (and ignores the winning share).</p>
+              <p class="mt-3">It updates when a worker reports a new best share after that point.</p>
+              <p class="mt-3">All-time best stays intact.</p>
+            </div>
+
+            <div class="mt-6" style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:flex-end;">
+              <button id="bestshare-reset-cancel" type="button" class="axe-btn axe-btn--ghost">Cancel</button>
+              <button id="bestshare-reset-confirm" type="button" class="axe-btn">Reset since-block</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
